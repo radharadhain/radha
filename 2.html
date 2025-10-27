@@ -13,7 +13,7 @@
 
   body {
     font-family: "Poppins", sans-serif;
-    background: url('https://live.staticflickr.com/65535/53601356381_3baa91be68_b.jpg') center/cover no-repeat fixed;
+    background: url('https://upload.wikimedia.org/wikipedia/commons/8/84/Premanand_Ji_Maharaj.jpg') center/cover no-repeat fixed;
     height: 100vh;
     display: flex;
     flex-direction: column;
@@ -21,6 +21,7 @@
     align-items: center;
     color: white;
     text-shadow: 1px 1px 3px black;
+    overflow: hidden;
   }
 
   .overlay {
@@ -87,7 +88,7 @@
 </div>
 
 <audio id="chantAudio" src="chant.mp3" preload="auto"></audio>
-<!-- Replace chant.mp3 with your actual 1.5-sec audio file -->
+<!-- Replace chant.mp3 with your actual 1.5-sec chant file -->
 
 <script>
   const chantBtn = document.getElementById("chantBtn");
@@ -101,20 +102,6 @@
   let autoChantRemaining = 0;
   let isAutoChanting = false;
   let audioUnlocked = false;
-
-  // 🕉️ Unlock and preload audio silently on first user tap
-  document.addEventListener("click", () => {
-    if (!audioUnlocked) {
-      chantAudio.volume = 0;
-      chantAudio.play().then(() => {
-        chantAudio.pause();
-        chantAudio.currentTime = 0;
-        chantAudio.volume = 1;
-        audioUnlocked = true;
-        console.log("Audio unlocked and preloaded ✅");
-      }).catch(err => console.warn("Audio preload blocked:", err));
-    }
-  }, { once: true });
 
   chantBtn.addEventListener("click", async () => {
     await playChantWithLock();
@@ -136,7 +123,14 @@
 
   async function playChantWithLock() {
     disableButtons(true);
+
     try {
+      // 🔓 Unlock and immediately chant on first click
+      if (!audioUnlocked) {
+        await unlockAndPlay();
+        audioUnlocked = true;
+      }
+
       await playChant();
       count++;
       updateCounter();
@@ -147,12 +141,31 @@
     }
   }
 
+  // Unlocks audio (silent) and immediately chants audibly
+  function unlockAndPlay() {
+    return new Promise((resolve) => {
+      chantAudio.volume = 0;
+      chantAudio.currentTime = 0;
+      chantAudio.play().then(() => {
+        chantAudio.pause();
+        chantAudio.currentTime = 0;
+        chantAudio.volume = 1;
+        chantAudio.play();
+        chantAudio.onended = resolve;
+        setTimeout(resolve, 1600);
+      }).catch(err => {
+        console.warn("Audio unlock issue:", err);
+        resolve();
+      });
+    });
+  }
+
   function playChant() {
     return new Promise((resolve) => {
       chantAudio.currentTime = 0;
       chantAudio.play();
       chantAudio.onended = () => resolve();
-      setTimeout(resolve, 1600); // Fallback timeout (1.6 sec)
+      setTimeout(resolve, 1600); // fallback
     });
   }
 
