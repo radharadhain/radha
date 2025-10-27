@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Premanand Maharaj Ji Chant Counter</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: "Poppins", sans-serif;
+    background: url('https://live.staticflickr.com/65535/53601356381_3baa91be68_b.jpg') center/cover no-repeat fixed;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    text-shadow: 1px 1px 3px black;
+  }
+
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 0;
+  }
+
+  .counter {
+    margin-top: 60px;
+    font-size: 2.5rem;
+    font-weight: bold;
+    z-index: 1;
+  }
+
+  .buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 80px;
+    z-index: 1;
+  }
+
+  button {
+    font-size: 1.2rem;
+    padding: 14px 40px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.85);
+    color: #222;
+    font-weight: 600;
+    transition: 0.2s;
+  }
+
+  button:hover {
+    background: #ffd700;
+    color: #000;
+  }
+
+  button:disabled {
+    background: rgba(255, 255, 255, 0.4);
+    cursor: not-allowed;
+  }
+
+  @media (min-width: 768px) {
+    .buttons {
+      flex-direction: row;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="overlay"></div>
+
+<div class="counter" id="counter">0</div>
+
+<div class="buttons">
+  <button id="chantBtn">Chant</button>
+  <button id="autoChantBtn">Auto Chant</button>
+  <button id="resetBtn">Reset</button>
+</div>
+
+<audio id="chantAudio" src="chant.mp3" preload="auto"></audio>
+<!-- Replace chant.mp3 with your actual 1.5-sec audio file -->
+
+<script>
+  const chantBtn = document.getElementById("chantBtn");
+  const autoChantBtn = document.getElementById("autoChantBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const counter = document.getElementById("counter");
+  const chantAudio = document.getElementById("chantAudio");
+
+  let count = 0;
+  let autoChantInterval = null;
+  let autoChantRemaining = 0;
+  let isAutoChanting = false;
+  let audioUnlocked = false;
+
+  // 🕉️ Unlock and preload audio silently on first user tap
+  document.addEventListener("click", () => {
+    if (!audioUnlocked) {
+      chantAudio.volume = 0;
+      chantAudio.play().then(() => {
+        chantAudio.pause();
+        chantAudio.currentTime = 0;
+        chantAudio.volume = 1;
+        audioUnlocked = true;
+        console.log("Audio unlocked and preloaded ✅");
+      }).catch(err => console.warn("Audio preload blocked:", err));
+    }
+  }, { once: true });
+
+  chantBtn.addEventListener("click", async () => {
+    await playChantWithLock();
+  });
+
+  autoChantBtn.addEventListener("click", () => {
+    const times = parseInt(prompt("Enter how many times to play the chant (e.g. 108):"));
+    if (isNaN(times) || times <= 0) return;
+    startAutoChant(times);
+  });
+
+  resetBtn.addEventListener("click", () => {
+    if (isAutoChanting) {
+      stopAutoChant();
+    } else {
+      resetCounter();
+    }
+  });
+
+  async function playChantWithLock() {
+    disableButtons(true);
+    try {
+      await playChant();
+      count++;
+      updateCounter();
+    } catch (err) {
+      console.error("Audio playback error:", err);
+    } finally {
+      disableButtons(false);
+    }
+  }
+
+  function playChant() {
+    return new Promise((resolve) => {
+      chantAudio.currentTime = 0;
+      chantAudio.play();
+      chantAudio.onended = () => resolve();
+      setTimeout(resolve, 1600); // Fallback timeout (1.6 sec)
+    });
+  }
+
+  function updateCounter() {
+    counter.textContent = count;
+  }
+
+  function startAutoChant(times) {
+    autoChantRemaining = times;
+    isAutoChanting = true;
+    chantBtn.disabled = true;
+    autoChantBtn.disabled = true;
+    resetBtn.textContent = "Stop";
+
+    const playNext = async () => {
+      if (autoChantRemaining <= 0) {
+        stopAutoChant();
+        return;
+      }
+      await playChant();
+      count++;
+      updateCounter();
+      autoChantRemaining--;
+      if (autoChantRemaining > 0) {
+        autoChantInterval = setTimeout(playNext, 1600);
+      }
+    };
+    playNext();
+  }
+
+  function stopAutoChant() {
+    clearTimeout(autoChantInterval);
+    isAutoChanting = false;
+    chantBtn.disabled = false;
+    autoChantBtn.disabled = false;
+    resetBtn.textContent = "Reset";
+  }
+
+  function resetCounter() {
+    count = 0;
+    updateCounter();
+  }
+
+  function disableButtons(state) {
+    chantBtn.disabled = state;
+    autoChantBtn.disabled = state || isAutoChanting;
+    resetBtn.disabled = state;
+  }
+</script>
+</body>
+</html>
