@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Premanand Maharaj Ji Chant Counter</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:"Poppins",sans-serif;
+    background:url('https://upload.wikimedia.org/wikipedia/commons/8/84/Premanand_Ji_Maharaj.jpg') center/cover no-repeat fixed;
+    color:#fff;text-shadow:1px 1px 3px #000;
+    height:100vh;display:flex;flex-direction:column;justify-content:space-between;align-items:center;overflow:hidden
+  }
+  .overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);z-index:0}
+  .counter{margin-top:60px;font-size:2.5rem;font-weight:bold;z-index:1}
+  .buttons{display:flex;flex-direction:column;gap:15px;margin-bottom:80px;z-index:1}
+  button{
+    font-size:1.2rem;padding:14px 40px;border:none;border-radius:50px;cursor:pointer;
+    background:rgba(255,255,255,.85);color:#222;font-weight:600;transition:.2s
+  }
+  button:hover{background:#ffd700;color:#000}
+  button:disabled{background:rgba(255,255,255,.4);cursor:not-allowed}
+  @media(min-width:768px){.buttons{flex-direction:row}}
+</style>
+</head>
+<body>
+<div class="overlay"></div>
+<div class="counter" id="counter">0</div>
+<div class="buttons">
+  <button id="chantBtn">Chant</button>
+  <button id="autoChantBtn">Auto Chant</button>
+  <button id="resetBtn">Reset</button>
+</div>
+
+<script>
+let audioCtx, chantBuffer;
+let count=0, autoInterval=null, remaining=0, autoMode=false;
+
+const chantBtn=document.getElementById("chantBtn");
+const autoBtn=document.getElementById("autoChantBtn");
+const resetBtn=document.getElementById("resetBtn");
+const counter=document.getElementById("counter");
+
+async function initAudio(){
+  if(audioCtx) return; // already unlocked
+  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  const resp=await fetch("chant.mp3");
+  const arrayBuf=await resp.arrayBuffer();
+  chantBuffer=await audioCtx.decodeAudioData(arrayBuf);
+}
+
+async function playChant(){
+  if(!chantBuffer) await initAudio();
+  const src=audioCtx.createBufferSource();
+  src.buffer=chantBuffer;
+  src.connect(audioCtx.destination);
+  src.start(0);
+  count++;counter.textContent=count;
+  return new Promise(res=>src.onended=res);
+}
+
+function disableAll(state){
+  chantBtn.disabled=state;
+  autoBtn.disabled=state||autoMode;
+  resetBtn.disabled=state;
+}
+
+chantBtn.addEventListener("click",async()=>{
+  disableAll(true);
+  try{
+    await initAudio();
+    await playChant();
+  }catch(e){console.error(e);}
+  disableAll(false);
+});
+
+autoBtn.addEventListener("click",async()=>{
+  const times=parseInt(prompt("How many times to chant? (e.g. 108)"));
+  if(isNaN(times)||times<=0)return;
+  await initAudio();
+  autoMode=true;
+  chantBtn.disabled=true;autoBtn.disabled=true;
+  resetBtn.textContent="Stop";
+  remaining=times;
+  const loop=async()=>{
+    if(remaining<=0){stopAuto();return;}
+    await playChant();
+    remaining--;
+    autoInterval=setTimeout(loop,1500);
+  };
+  loop();
+});
+
+function stopAuto(){
+  clearTimeout(autoInterval);
+  autoMode=false;
+  chantBtn.disabled=false;
+  autoBtn.disabled=false;
+  resetBtn.textContent="Reset";
+}
+
+resetBtn.addEventListener("click",()=>{
+  if(autoMode){stopAuto();}
+  else{count=0;counter.textContent=0;}
+});
+
+// 🔓 unlock context on first user gesture
+window.addEventListener("click",()=>audioCtx?.resume?.());
+window.addEventListener("touchstart",()=>audioCtx?.resume?.());
+</script>
+</body>
+</html>
