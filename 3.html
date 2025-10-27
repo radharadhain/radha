@@ -8,23 +8,17 @@
   *{margin:0;padding:0;box-sizing:border-box}
   body{
     font-family:"Poppins",sans-serif;
-    background:url('https://upload.wikimedia.org/wikipedia/commons/8/84/Premanand_Ji_Maharaj.jpg') center/cover no-repeat fixed;
+    background:url('https://live.staticflickr.com/65535/53601356381_3baa91be68_b.jpg') center/cover no-repeat fixed;
     color:#fff;text-shadow:1px 1px 3px #000;
     height:100vh;display:flex;flex-direction:column;justify-content:space-between;align-items:center;overflow:hidden;
   }
   .overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);z-index:0}
   .counter{
     margin-top:60px;
-    font-size:3rem;
+    font-size:3.2rem;
     font-weight:bold;
     z-index:1;
     text-align:center;
-  }
-  .date-info{
-    font-size:1rem;
-    font-weight:400;
-    margin-top:8px;
-    opacity:0.9;
   }
   .buttons{
     display:flex;
@@ -52,7 +46,6 @@
 <body>
 <div class="overlay"></div>
 <div class="counter" id="counter">0</div>
-<div class="date-info" id="dateInfo"></div>
 <div class="buttons">
   <button id="chantBtn">Chant</button>
   <button id="autoChantBtn">Auto Chant</button>
@@ -66,30 +59,21 @@ const chantBtn = document.getElementById("chantBtn");
 const autoBtn = document.getElementById("autoChantBtn");
 const resetBtn = document.getElementById("resetBtn");
 const counter = document.getElementById("counter");
-const dateInfo = document.getElementById("dateInfo");
 
-const todayKey = new Date().toISOString().slice(0,10); // yyyy-mm-dd key for today
-
-// Load saved count if available
+// Load saved count
 function loadCount() {
-  const savedData = JSON.parse(localStorage.getItem("radhaChantCount") || "{}");
-  if (savedData.date === todayKey) {
-    count = savedData.count;
-  } else {
-    count = 0;
-  }
+  const saved = localStorage.getItem("radhaChantPermanent");
+  if (saved) count = parseInt(saved);
   updateCounter();
 }
 
-// Save count to localStorage
+// Save count permanently
 function saveCount() {
-  localStorage.setItem("radhaChantCount", JSON.stringify({ date: todayKey, count }));
+  localStorage.setItem("radhaChantPermanent", count);
 }
 
 function updateCounter() {
   counter.textContent = count;
-  const date = new Date().toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' });
-  dateInfo.textContent = `Today's Count (${date})`;
 }
 
 async function initAudio(){
@@ -168,11 +152,11 @@ resetBtn.addEventListener("click", () => {
   }
 });
 
-// Unlock audio context on first interaction (required by mobile browsers)
+// Unlock audio context on first interaction (for mobile browsers)
 window.addEventListener("click", () => audioCtx?.resume?.());
 window.addEventListener("touchstart", () => audioCtx?.resume?.());
 
-// Initialize
+// Initialize counter
 loadCount();
 </script>
 </body>
