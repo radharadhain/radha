@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -8,7 +8,7 @@
   *{margin:0;padding:0;box-sizing:border-box}
   body{
     font-family:"Poppins",sans-serif;
-    background:url('https://upload.wikimedia.org/wikipedia/commons/8/84/Premanand_Ji_Maharaj.jpg') center/cover no-repeat fixed;
+    background:url('https://live.staticflickr.com/65535/53601356381_3baa91be68_b.jpg') center/cover no-repeat fixed;
     color:#fff;text-shadow:1px 1px 3px #000;
     height:100vh;display:flex;flex-direction:column;justify-content:space-between;align-items:center;overflow:hidden;
   }
@@ -41,22 +41,6 @@
   button:hover{background:#ffd700;color:#000}
   button:disabled{background:rgba(255,255,255,.4);cursor:not-allowed}
   @media(min-width:768px){.buttons{flex-direction:row}}
-
-  footer{
-    position:absolute;
-    bottom:15px;
-    text-align:center;
-    font-size:0.9rem;
-    color:#fff;
-    z-index:1;
-    text-shadow:1px 1px 3px #000;
-  }
-  footer a{
-    color:#ffd700;
-    text-decoration:none;
-    font-weight:600;
-  }
-  footer a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -67,11 +51,6 @@
   <button id="autoChantBtn">Auto Chant</button>
   <button id="resetBtn">Reset</button>
 </div>
-
-<footer>
-  Made with ❤️ for Shri Premanand Maharaj Ji by 
-  <a href="https://nirajkanjani.com" target="_blank">Niraj Kanjani</a>
-</footer>
 
 <script>
 let audioCtx, chantBuffer;
